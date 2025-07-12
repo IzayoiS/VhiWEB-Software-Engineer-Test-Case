@@ -1,24 +1,52 @@
+const prisma = require("../lib/prisma.js");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
 class AuthService {
-  constructor() {
-    this.users = []; // Mock database
+  async register(username, password) {
+    const existingUser = await prisma.user.findUnique({
+      where: { username },
+    });
+    if (existingUser) {
+      throw new Error("Username already exists");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { username, password: hashedPassword },
+    });
+
+    return {
+      id: user.id,
+      username: user.username,
+      password: hashedPassword,
+    };
   }
 
-  register(username, password) {
-    const user = { username, password };
-    this.users.push(user);
-    return user;
-  }
+  async login(username, password) {
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
 
-  login(username, password) {
-    const user = this.users.find(
-      (u) => u.username === username && u.password === password
-    );
-    if (!user) {
+    if (!user || user.password !== password) {
       throw new Error("Invalid credentials");
     }
-    const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET);
-    return { token };
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+      },
+    };
   }
 }
 
-export default new AuthService();
+module.exports = new AuthService();
