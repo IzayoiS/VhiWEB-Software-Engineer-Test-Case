@@ -12,7 +12,11 @@ const authenticate = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: "Failed to authenticate token" });
+      return res.status(403).json({
+        status: "error",
+        code: 403,
+        message: "Failed to authenticate token",
+      });
     }
     req.user = decoded;
     next();

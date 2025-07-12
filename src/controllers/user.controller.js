@@ -3,6 +3,15 @@ const userService = require("../services/user.service");
 class UserController {
   static async getByusername(req, res) {
     const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Username is required",
+      });
+    }
+
     try {
       const user = await userService.getUserByUsername(username);
       if (!user) {

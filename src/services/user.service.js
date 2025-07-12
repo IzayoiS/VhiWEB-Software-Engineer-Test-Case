@@ -1,5 +1,4 @@
 const prisma = require("../lib/prisma.js");
-const bcrypt = require("bcrypt");
 
 class UserService {
   constructor(prisma) {

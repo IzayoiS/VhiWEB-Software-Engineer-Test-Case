@@ -4,10 +4,13 @@ const userService = require("../services/user.service");
 class AuthController {
   static async register(req, res) {
     const { username, password } = req.body;
+
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Username and password are required" });
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Username and password are required",
+      });
     }
     try {
       const user = await authService.register(username, password);
@@ -32,7 +35,11 @@ class AuthController {
       const user = await userService.getUserByUsername(username);
 
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({
+          status: "error",
+          code: 404,
+          message: "User not found",
+        });
       }
 
       return res.json({

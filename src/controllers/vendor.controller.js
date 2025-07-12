@@ -3,6 +3,15 @@ const vendorService = require("../services/vendor.service");
 class VendorController {
   static async registerVendor(req, res) {
     const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Name is required",
+      });
+    }
+
     const userId = req.user.id;
     try {
       const vendor = await vendorService.registerVendor(name, userId);

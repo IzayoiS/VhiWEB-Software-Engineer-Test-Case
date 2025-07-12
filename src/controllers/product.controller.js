@@ -1,41 +1,105 @@
-const products = []; // Mock database
+const productService = require("../services/product.service");
 
-export const getProducts = (req, res) => {
-  const userProducts = products.filter((p) => p.owner === req.user.username);
-  res.json(userProducts);
-};
+class ProductController {
+  static async getProducts(req, res) {
+    const userId = req.user.id;
+    try {
+      const products = await productService.getProducts(userId);
+      res.json({
+        status: "success",
+        code: 200,
+        data: products,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        code: 500,
+        message: error.message,
+      });
+    }
+  }
 
-export const addProduct = (req, res) => {
-  const { name, price } = req.body;
-  if (!name || !price)
-    return res.status(400).json({ message: "Missing fields" });
-  const newProduct = {
-    id: products.length + 1,
-    name,
-    price,
-    owner: req.user.username,
-  };
-  products.push(newProduct);
-  res.json(newProduct);
-};
+  static async addProduct(req, res) {
+    const { name, price } = req.body;
 
-export const updateProduct = (req, res) => {
-  const product = products.find(
-    (p) => p.id === parseInt(req.params.id) && p.owner === req.user.username
-  );
-  if (!product) return res.status(404).json({ message: "Product not found" });
-  const { name, price } = req.body;
-  if (name) product.name = name;
-  if (price) product.price = price;
-  res.json(product);
-};
+    if (!name || !price) {
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Name and price are required",
+      });
+    }
 
-export const deleteProduct = (req, res) => {
-  const index = products.findIndex(
-    (p) => p.id === parseInt(req.params.id) && p.owner === req.user.username
-  );
-  if (index === -1)
-    return res.status(404).json({ message: "Product not found" });
-  products.splice(index, 1);
-  res.json({ message: "Deleted successfully" });
-};
+    const userId = req.user.id;
+    try {
+      const product = await productService.addProduct({
+        name,
+        price,
+        ownerId: userId,
+      });
+      res.status(201).json({
+        status: "success",
+        code: 201,
+        data: product,
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        code: 400,
+        message: error.message,
+      });
+    }
+  }
+
+  static async updateProduct(req, res) {
+    const { id } = req.params;
+    const { name, price } = req.body;
+
+    if (!name || !price) {
+      return res.status(400).json({
+        status: "error",
+        code: 400,
+        message: "Name and price are required",
+      });
+    }
+    const userId = req.user.id;
+    try {
+      const product = await productService.updateProduct(parseInt(id), userId, {
+        name,
+        price,
+      });
+      res.json({
+        status: "success",
+        code: 200,
+        data: product,
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        code: 400,
+        message: error.message,
+      });
+    }
+  }
+
+  static async deleteProduct(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    try {
+      await productService.deleteProduct(parseInt(id), userId);
+      res.json({
+        status: "success",
+        code: 200,
+        message: "Product deleted successfully",
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        code: 400,
+        message: error.message,
+      });
+    }
+  }
+}
+
+module.exports = ProductController;
